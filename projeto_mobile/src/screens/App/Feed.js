@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, StatusBar } from 'react-native';
 import dataBase from '../../data/users';
 
-const FeedScreen = () => {
+const Feed = () => {
+
   const [selectedFilter, setSelectedFilter] = useState('Todos');
 
-  // Função para agrupar os estudantes por turno
   const groupStudentsByShift = () => {
     const shifts = {
       manhã: {
@@ -22,7 +22,6 @@ const FeedScreen = () => {
       }
     };
 
-    // Para garantir que cada estudante apareça apenas uma vez por turno
     const seenStudents = new Set();
 
     dataBase.forEach(student => {
@@ -104,6 +103,10 @@ const FeedScreen = () => {
       ))}
     </View>
   );
+
+  useEffect(() => {
+    StatusBar.setBarStyle('light-content', true);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -202,4 +205,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FeedScreen;
+export default Feed;
