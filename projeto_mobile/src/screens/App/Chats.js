@@ -1,100 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  Modal,
-  Alert,
-  Image,
-  StatusBar,
-  TextInput
+import React, { useEffect, useState } from 'react';
+import { 
+  Text, 
+  View, 
+  StatusBar, 
+  TouchableOpacity, 
+  Image, 
+  ScrollView, 
+  Alert, 
+  StyleSheet 
 } from 'react-native';
 import { Feather as Icon, MaterialIcons as MIcon } from '@expo/vector-icons';
-import Swiper from 'react-native-swiper';
+import { useNavigation } from '@react-navigation/native';
 import usersData from '../../data/users';
 
 const Chats = () => {
+  const navigation = useNavigation();
   const [messages, setMessages] = useState(usersData);
-  const [currentMessages, setCurrentMessages] = useState([]);
-  const [messageModalVisible, setMessageModalVisible] = useState(false);
-  const [searchText, setSearchText] = useState('');
 
-  const filteredMessages = messages.filter((chat) =>
-    chat.userName.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const handleLongPress = (chat) => {
+    Alert.alert(
+      'Apagar conversa',
+      `Deseja apagar a conversa com ${chat.userName}?`,
+      [
+        {
+          text: 'Cancelar',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Apagar',
+          onPress: () => {
+            const newChats = messages.filter(
+              (m) => m.userName !== chat.userName
+            );
+            setMessages(newChats);
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
 
   useEffect(() => {
-    StatusBar.setBarStyle('light-content', true);
+    StatusBar.setBarStyle('dark-content', true);
   }, []);
 
   return (
-    <View
-      style={styles.container}
-    >
-      <StatusBar barStyle="light-content" />
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Pesquisar..."
-          placeholderTextColor='#555'
-          value={searchText}
-          onChangeText={(text) => setSearchText(text)}
-        />
-        <Icon name="search" size={20} color='#aeb0d4' />
-      </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+
+      <TouchableOpacity 
+        style={styles.searchButton} 
+        onPress={() => navigation.navigate('AppStack', { screen: 'SearchChats' })}
+      >
+        <Icon name="search" size={22} color='#6C6C70' />
+        <Text style={styles.searchButtonText}>Pesquisar...</Text>
+      </TouchableOpacity>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {filteredMessages.map((chat) => (
+        {messages.map((chat) => (
           <TouchableOpacity
             key={chat.userName}
             style={styles.cardMessages}
-            onLongPress={() => {
-              Alert.alert(
-                'Apagar conversa',
-                `Deseja apagar a conversa com ${chat.userName}?`,
-                [
-                  {
-                    text: 'Cancelar',
-                    onPress: () => {},
-                    style: 'cancel',
-                  },
-                  {
-                    text: 'Apagar',
-                    onPress: () => {
-                      const newChats = messages.filter(
-                        (m) => m.userName !== chat.userName
-                      );
-                      setMessages(newChats);
-                    },
-                  },
-                ],
-                { cancelable: false }
-              );
-            }}
+            onPress={() => navigation.navigate('AppStack', { screen: 'ChatDetails', params: { user: chat } })}
+            onLongPress={() => handleLongPress(chat)}
           >
-            <TouchableOpacity
-              onPress={() => {
-                const chatMessages = messages.filter(
-                  (message) => message.userName === chat.userName
-                );
-                if (chatMessages.length > 0) {
-                  setCurrentMessages(chatMessages);
-                  setMessageModalVisible(true);
-                }
-              }}
-            >
-              <Image
-                style={styles.imageUser}
-                source={{ uri: chat.userImage}}
-              />
-            </TouchableOpacity>
+            <Image
+              style={styles.imageUser}
+              source={{ uri: chat.userImage }}
+            />
             <View style={styles.messageDetails}>
               <View style={styles.header}>
                 <Text style={styles.userName}>{chat.userName}</Text>
                 <Text style={styles.time}>{chat.time}</Text>
               </View>
+
               <View style={styles.messageContainer}>
                 {chat.isTyping ? (
                   <Text style={styles.typingText}>digitando...</Text>
@@ -102,11 +82,13 @@ const Chats = () => {
                   <Text style={styles.messageText}>{chat.message.text}</Text>
                 )}
                 {chat.message.sender === 'Você' && (
-                  chat.message.seenByUser ? (
-                    <MIcon name='done-all' size={16} color='#3c40c6' />
-                  ) : (
-                    <MIcon name='done' size={16} color={'#555'} />
-                  )
+                  <View style={styles.seenStatus}>
+                    {chat.message.seenByUser ? (
+                      <MIcon name='done-all' size={16} color='#3c40c6' />
+                    ) : (
+                      <MIcon name='done' size={16} color={'#222'} />
+                    )}
+                  </View>
                 )}
               </View>
             </View>
@@ -114,42 +96,6 @@ const Chats = () => {
         ))}
         <View style={styles.bottomSpacer} />
       </ScrollView>
-
-      <Modal
-        animationType='slide'
-        transparent={true}
-        visible={messageModalVisible}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setMessageModalVisible(false)}
-            >
-              <Icon name='x' color='#fafafa' size={26} />
-            </TouchableOpacity>
-            <Swiper
-              showsButtons={true}
-              style={styles.swiper}
-              loop={false}
-              showsPagination={false}
-            >
-              {currentMessages.map((message) => (
-                <View key={message.userName} style={styles.swiperSlide}>
-                  <View style={styles.messagesUser}>
-                    <Image
-                      style={styles.storyUserImage}
-                      source={{ uri: message.userImage}}
-                    />
-                    <Text style={styles.storyUserName}>{message.userName}</Text>
-                  </View>
-                  <Text style={styles.storyMessageText}>{message.message.text}</Text>
-                </View>
-              ))}
-            </Swiper>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -157,124 +103,68 @@ const Chats = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 14,
   },
-  searchContainer: {
+  searchButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    marginBottom: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 22,
     paddingHorizontal: 10,
-    borderRadius: 20,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#aeb0d4',
-    color: '#aeb0d4',
-    marginRight: 5,
+    paddingVertical: 12,
+    marginBottom: 20,
+    marginTop: 5
+  },
+  searchButtonText: {
+    marginLeft: 10,
+    color: '#6C6C70',
+    fontSize: 16
   },
   cardMessages: {
-    marginTop: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fafafa',
-    borderBottomWidth: 1,
-    borderBottomColor: '#dfe4ea',
+    paddingVertical: 14
   },
   imageUser: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
   },
   messageDetails: {
     flex: 1,
-    paddingHorizontal: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: 'bold'
-  },
-  time: {
-    fontSize: 14,
-    color: '#676767',
   },
   messageContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  typingText: {
-    color: '#3c40c6',
-    fontSize: 16,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  userName: {
+    fontSize: 18
+  },
+  time: {
+    color: '#6C6C70',
+    fontSize: 14
   },
   messageText: {
-    fontSize: 16,
-    color: '#676767',
+    color: '#6C6C70',
+    fontSize: 16
+  },
+  typingText: {
+    color: '#059212',
+    fontSize: 16
   },
   bottomSpacer: {
     height: 20,
   },
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalView: {
-    width: '90%',
-    height: '90%',
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: '#1f2a36',
-  },
-  modalCloseButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    zIndex: 1,
-    backgroundColor: 'rgba(51, 51, 51, 0.3)',
-    borderRadius: 100,
-    padding: 2,
-  },
-  swiper: {
-    height: '100%',
-  },
-  swiperSlide: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  messagesUser: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(51, 51, 51, 0.3)',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  storyUserImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  storyUserName: {
-    color: '#fff',
-    marginLeft: 10,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  storyMessageText: {
-    color: '#fff',
-    fontSize: 16,
+  seenStatus: {
+    alignSelf: 'flex-end',
+    marginTop: 4,
   },
 });
 

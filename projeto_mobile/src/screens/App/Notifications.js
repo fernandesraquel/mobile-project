@@ -9,13 +9,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import dataBase from '../../data/users'; 
+import { Feather as Icon, MaterialIcons as MIcon, FontAwesome as FAIcon } from '@expo/vector-icons';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('Todas'); 
 
   useEffect(() => {
-    StatusBar.setBarStyle('light-content', true);
+    StatusBar.setBarStyle('dark-content', true);
 
     if (Array.isArray(dataBase)) {
       const allNotifications = dataBase.flatMap(user => 
@@ -47,13 +48,13 @@ const Notifications = () => {
           style={[styles.filterButton, filter === 'Todas' && styles.activeFilterButton]}
           onPress={() => setFilter('Todas')}
         >
-          <Text style={[styles.filterText, filter !== 'Todas' && styles.inactiveFilterText]}>Todas</Text>
+          <Text style={[styles.filterText, filter === 'Todas' && styles.activeFilterText]}>Todas</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.filterButton, filter === 'Não lidas' && styles.activeFilterButton]}
           onPress={() => setFilter('Não lidas')}
         >
-          <Text style={[styles.filterText, filter !== 'Não lidas' && styles.inactiveFilterText]}>Não lidas</Text>
+          <Text style={[styles.filterText, filter === 'Não lidas' && styles.activeFilterText]}>Não lidas</Text>
         </TouchableOpacity>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -66,14 +67,13 @@ const Notifications = () => {
                 <View style={styles.notificationHeader}>
                   <Image source={{ uri: notification.userImage }} style={styles.userImage} />
                   <View style={styles.notificationTextContainer}>
-                  <View style={styles.direction}>
-                    <Text style={styles.userName}>{notification.userName}</Text>
-                    <Text style={styles.notificationTime}>{notification.timestamp}</Text>
-                  </View>
+                    <View style={styles.direction}>
+                      <Text style={styles.userName}>{notification.userName}</Text>
+                      <Text style={styles.notificationTime}>{notification.timestamp}</Text>
+                    </View>
                     <Text style={styles.notificationText}>{notification.text}</Text>
                   </View>
                 </View>
-                
               </View>
             ))
           )}
@@ -100,20 +100,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 32,
     borderWidth: 1,
-    borderColor: '#aeb0d4',
+    borderColor: '#DFDEF1',
   },
   activeFilterButton: {
-    backgroundColor: '#aeb0d4',
+    backgroundColor: '#DFDEF1',
   },
   filterText: {
     fontSize: 16,
   },
-  inactiveFilterText: {
-    color: '#aeb0d4',
-  },
-  filterButtonText: {
-    fontSize: 16,
-    color: '#555',
+  activeFilterText: {
+    color: '#3c40c6',
+    fontWeight: '600'
   },
   notificationCard: {
     flex: 1,
@@ -121,8 +118,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
     backgroundColor: '#fafafa',
-    borderBottomWidth: 1,
-    borderBottomColor: '#dfe4ea',
   },
   notificationHeader: {
     flexDirection: 'row',
@@ -130,7 +125,7 @@ const styles = StyleSheet.create({
   },
   direction: {
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
   userImage: {
     width: 40,
@@ -143,25 +138,21 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 18,
-    fontWeight: 'bold',
   },
   notificationText: {
+    color: '#6C6C70',
     fontSize: 16,
-    color: '#676767',
   },
   notificationTime: {
+    color: '#6C6C70',
     fontSize: 14,
-    color: '#555',
   },
   noNotificationsText: {
     fontSize: 16,
-    color: '#bcbfc5',
+    color: '#6C6C70',
     textAlign: 'center',
     marginTop: 20,
   },
 });
 
 export default Notifications;
-
-
-

@@ -1,119 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, StatusBar } from 'react-native';
-import dataBase from '../../data/users';
+import React from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { MaterialCommunityIcons as MCIcons } from '@expo/vector-icons';
+import MapView from 'react-native-maps';
+
+// Dados dos serviços
+const options = [
+  { id: '1', title: 'Atualização Cadastral', icon: 'account-edit', view: 'Registration' },
+  { id: '2', title: 'Configurações', icon: 'cogs', view: 'Settings' },
+];
 
 const Feed = () => {
-
-  const [selectedFilter, setSelectedFilter] = useState('Todos');
-
-  const groupStudentsByShift = () => {
-    const shifts = {
-      manhã: {
-        times: ['05:40 AM', '11:40 AM'],
-        students: []
-      },
-      tarde: {
-        times: ['05:40 PM', '12:30 PM'],
-        students: []
-      },
-      noite: {
-        times: ['07:30 PM', '10:00 PM'],
-        students: []
-      }
-    };
-
-    const seenStudents = new Set();
-
-    dataBase.forEach(student => {
-      Object.keys(student.shifts).forEach(shiftName => {
-        const shift = student.shifts[shiftName];
-        shift.ida.forEach(time => {
-          if (shifts[shiftName].times.includes(time) && !seenStudents.has(student.userName)) {
-            shifts[shiftName].students.push({ ...student, reservationTime: time, type: 'ida' });
-            seenStudents.add(student.userName);
-          }
-        });
-        shift.volta.forEach(time => {
-          if (shifts[shiftName].times.includes(time) && !seenStudents.has(student.userName)) {
-            shifts[shiftName].students.push({ ...student, reservationTime: time, type: 'volta' });
-            seenStudents.add(student.userName);
-          }
-        });
-      });
-    });
-
-    return shifts;
+  const showAlert = (view) => {
+    Alert.alert('Serviço Selecionado', `Você selecionou o serviço: ${view}`);
   };
-
-  const shifts = groupStudentsByShift();
-
-  // Filtra os estudantes com base no filtro selecionado
-  const filterStudents = (students) => {
-    if (selectedFilter === 'Todos') {
-      return students;
-    }
-    return students.filter(student => student.type === selectedFilter.toLowerCase());
-  };
-
-  const renderStudentItem = ({ item }) => (
-    <View style={styles.studentItem}>
-      <Image source={{ uri: item.userImage }} style={styles.studentAvatar} />
-    </View>
-  );
-
-  const renderShiftSection = (shiftName) => (
-    <View style={styles.cardContainer}>
-      <View style={styles.timelineContainer}>
-        <View style={styles.timelineDot} />
-        <View style={styles.timelineLine} />
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{shiftName.charAt(0).toUpperCase() + shiftName.slice(1)}</Text>
-        <Text style={styles.cardTimes}>{shifts[shiftName].times.join(', ')}</Text>
-        <FlatList
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-          data={filterStudents(shifts[shiftName].students)}
-          renderItem={renderStudentItem}
-          keyExtractor={(item, index) => index.toString()}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        />
-      </View>
-    </View>
-  );
-
-  const FilterBar = () => (
-    <View style={styles.filterBar}>
-      {['Todos', 'Ida', 'Volta'].map((filter) => (
-        <TouchableOpacity
-          key={filter}
-          style={[
-            styles.filterButton,
-            selectedFilter === filter && styles.filterButtonActive
-          ]}
-          onPress={() => setSelectedFilter(filter)}
-        >
-          <Text style={[
-            styles.filterButtonText,
-            selectedFilter === filter && styles.filterButtonTextActive
-          ]}>
-            {filter}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-
-  useEffect(() => {
-    StatusBar.setBarStyle('light-content', true);
-  }, []);
 
   return (
     <View style={styles.container}>
-      <FilterBar />
-      {renderShiftSection('manhã')}
-      {renderShiftSection('tarde')}
-      {renderShiftSection('noite')}
+
+      {/* Mapa com Instituições */}
+      <View style={styles.mapContainer}>
+        <Text style={styles.mapTitle}>Rotas do Dia</Text>
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: -6.4531,
+            longitude: -37.1004,
+            latitudeDelta: 0.064,
+            longitudeDelta: 0.05,
+          }}
+        />
+      </View>
+
+      {/* Lista de Serviços */}
+      <View style={styles.content}>
+        <Text style={styles.header}>Outros Serviços</Text>
+        <FlatList
+          style={styles.list}
+          contentContainerStyle={styles.listContainer}
+          data={options}
+          horizontal={true}
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => showAlert(item.view)}
+            >
+              <View style={styles.cardContent}>
+                <MCIcons name={item.icon} size={50} color="#3c40c6" />
+                <Text style={styles.title}>{item.title}</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
     </View>
   );
 };
@@ -121,87 +61,62 @@ const Feed = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 20
+    backgroundColor: '#fafafa',
   },
-  cardContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+  mapContainer: {
+    height: 450,
+    marginVertical: 20,
   },
-  timelineContainer: {
-    width: 2,
-    alignItems: 'center',
-    marginRight: 20,
+  mapTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#3c40c6',
+    marginBottom: 15,
+    paddingHorizontal: 20,
   },
-  timelineDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#007bff',
-    marginBottom: 4,
-  },
-  timelineLine: {
-    width: 2,
+  map: {
     flex: 1,
-    backgroundColor: '#007bff',
+  },
+  content: {
+    paddingHorizontal: 10,
+    paddingBottom: 20,
+  },
+  header: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#3c40c6',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  list: {
+    backgroundColor: '#fafafa',
+  },
+  listContainer: {
+    alignItems: 'center',
   },
   card: {
-    flex: 1,
-    backgroundColor: '#aeb0d4',
-    borderRadius: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 4,
-    padding: 16,
+    marginVertical: 10,
+    backgroundColor: '#fff',
+    width: 170,
+    borderRadius: 12,
+    alignItems: 'center',
+    paddingVertical: 20,
+    marginHorizontal: 8,
   },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  cardContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  cardTimes: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 8,
-  },
-  studentItem: {
-    flexDirection: 'row',
-    marginLeft: -16,
-    paddingVertical: 8,
-  },
-  studentAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 32,
-    borderWidth: 1,
-    borderColor: '#fff',
-    marginRight: 8,
-  },
-  filterBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  filterButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 50,
-    borderWidth: 1,
-    borderColor: '#aeb0d4',
-  },
-  filterButtonActive: {
-    backgroundColor: '#aeb0d4',
-  },
-  filterButtonText: {
+  title: {
     fontSize: 16,
-    color: '#555',
-  },
-  filterButtonTextActive: {
-    color: '#fff',
+    textAlign: 'center',
+    color: '#3c40c6',
+    marginTop: 8,
   },
 });
 
